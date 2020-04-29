@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample</title>
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <!-- <script src="chat.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+    <style>
+        .box {
+            display: grid;
+            grid-template-rows: auto;
+            grid-template-columns: repeat(5, auto);
+            grid-gap: 0px;
+            height: auto;
+
+
+        }
+
+        .border {
+            border: 2px solid red;
+        }
+
+        .st {
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<script>
+
+$(() => {
+    $("#send").click(()=>{
+       sendMessage({
+          name: $("#name").val(), 
+          message:$("#message").val()});
+        })
+      getMessages()
+    })
+    
+function getNumber(message){
+    // TO strike out the number
+}
+   
+function getMessages(){
+  $.get('http://localhost:3000/messages', (data) => {
+   data.forEach(getMessages);
+   })
+ }
+ 
+function sendMessage(message){
+   $.post('http://localhost:3000/messages', message)
+ }
+
+
+
+    window.onload = function () {
+
+        
+        let box = document.querySelector('.box');
+        let button = document.getElementById('refresh');
+        var arr = [];
+        var strikes = [];
+        var rules = SetupGameRules();
+        button.addEventListener('click', function (event) {
+
+        });
+
+
+        let displVal = 0;
+        for (let index = 1; index <= 25; index++) {
+            arr.push(index);
+        }
+
+        arr = arr.sort(() => Math.random() - 0.5);
+        for (let index = 0; index < 25; index++) {
+            let divElement = document.createElement("div");
+
+            divElement.innerText = arr[index];
+            divElement.classList.add("num" + index);
+            divElement.classList.add("border");
+            box.appendChild(divElement);
+        }
+
+
+        let querySelectors = document.querySelectorAll('[class*=num]');
+        querySelectors.forEach(element => {
+            element.addEventListener('click', (event) => {
+                let element = event.target;
+                element.classList.add("st");
+                $.post('http://localhost:3000/send-number', element.innerText);
+                findTheStrikeLogic()
+            })
+        });
+
+
+        function findTheStrikeLogic() {
+            let arrNums = [];
+            var strikeThroughs = document.querySelectorAll('[class*=st]');
+            strikeThroughs.forEach(ele => {
+                let classlist = Array.from(ele.classList);
+                classlist.forEach(element => {
+                    if (element.startsWith("num")) {
+                        let num = element.replace("num", "");
+                        arrNums.push(parseInt(num));
+                    }
+                });
+            })
+
+            console.log(arrNums);
+
+
+            rules.filter(x => !x.IsValidated).forEach(element => {
+                element.Test(arrNums)
+            });
+        }
+
+        function SetupGameRules() {
+            let _gameRules = []
+
+            let rule1 = new Rules();
+            rule1.Rule = [0, 1, 2, 3, 4];
+            _gameRules.push(rule1);
+            let rule2 = new Rules();
+            rule2.Rule = [5, 6, 7, 8, 9];
+            _gameRules.push(rule2);
+            let rule3 = new Rules();
+            rule3.Rule = [10, 11, 12, 13, 14];
+            _gameRules.push(rule3);
+            let rule4 = new Rules();
+            rule4.Rule = [15, 16, 17, 18, 19];
+            _gameRules.push(rule4);
+            let rule5 = new Rules();
+            rule5.Rule = [20, 21, 22, 23, 24];
+            _gameRules.push(rule5);
+            let rule6 = new Rules();
+            rule6.Rule = [0, 5, 10, 15, 20];
+            _gameRules.push(rule6);
+            let rule7 = new Rules();
+            rule7.Rule = [1, 6, 11, 16, 21];
+            _gameRules.push(rule7);
+            let rule8 = new Rules();
+            rule8.Rule = [2, 7, 12, 17, 22];
+            _gameRules.push(rule8);
+            let rule9 = new Rules();
+            rule9.Rule = [3, 8, 13, 18, 23];
+            _gameRules.push(rule9);
+            let rule10 = new Rules();
+            rule10.Rule = [4, 9, 14, 19, 24];
+            _gameRules.push(rule10);
+            let rule11 = new Rules();
+            rule11.Rule = [0, 6, 12, 18, 24];
+            _gameRules.push(rule11);
+            let rule12 = new Rules();
+            rule12.Rule = [4, 8, 12, 16, 20];
+            _gameRules.push(rule12);
+
+            return _gameRules;
+        }
+
+        function Rules() {
+            this.IsValidated = false;
+            this.Rule = [];
+
+        }
+
+        Rules.prototype.Test = function (params) {
+            let matchCount = 0;
+            let paramsArr = Array.from(params)
+            for (let index = 0; index < params.length; index++) {
+
+                var ruleArr = Array.from(this.Rule);
+                var indexVal = ruleArr.indexOf(paramsArr[index])
+
+                if (this.Rule.length > 0 && indexVal >=0) {
+                    matchCount = matchCount+1;
+                }
+            }
+
+            if (matchCount == 5) {
+                this.IsValidated = true;
+                console.log(this.Rule);
+            }
+        }
+    }
+</script>
+
+<body>
+    <button id="refresh">Refresh</button>
+    <div class="box">
+
+    </div>
+</body>
+
+</html>
